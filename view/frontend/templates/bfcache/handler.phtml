@@ -150,11 +150,38 @@ $script = <<<JS
         /**
          * Page restoration handler — persistent global instance
          */
+		const initHandler = () => (window._bfcacheHandler ??= new BFCacheHandler()).init();
+		
+		// 1️⃣ Chrome / Firefox / Safari / Edge — BFCache restore
+		
         window.addEventListener('pageshow', (event) => {
-            if (event.persisted) {
-                (window._bfcacheHandler ??= new BFCacheHandler()).init();
-            }
+        const navType = performance.getEntriesByType('navigation')[0]?.type;
+        if (event.persisted || navType === 'back_forward') {
+            initHandler();
+        }
         }, { passive: true });
+		
+		// 2️⃣ Chrome / Edge — prerendering API
+		if ('prerendering' in document || 'onprerenderingchange' in document) {
+			document.addEventListener('prerenderingchange', () => {
+				if (!window._bfcacheHandler?._initialized) {
+					window._bfcacheHandler = new BFCacheHandler();
+					window._bfcacheHandler._initialized = true;
+					window._bfcacheHandler.init();
+				}
+			}, { passive: true });
+		}
+		
+		// 3️⃣ Safari / Legacy fallback — visibilitychange
+		
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible' && !window._bfcacheHandler?._initialized) {
+				window._bfcacheHandler = new BFCacheHandler();
+				window._bfcacheHandler._initialized = true;
+				window._bfcacheHandler.init();
+			}
+		}, { passive: true });
+
     })();
     JS;
 ?>
