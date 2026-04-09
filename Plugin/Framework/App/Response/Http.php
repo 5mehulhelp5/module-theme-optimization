@@ -93,6 +93,14 @@ class Http
      */
     private function isRequestCacheable(string $cacheControl): bool
     {
+        // FPC hits will not have public or private cache control directives -- already processed
+        if (!str_contains($cacheControl, 'public')
+            && !str_contains($cacheControl, 'private')
+            && !str_contains($cacheControl, 'no-store')) {
+            return true;
+        }
+
+        // FPC misses will be cacheable if they have a public directive
         return (bool) preg_match('/public.*s-maxage=(\d+)/', $cacheControl);
     }
 
