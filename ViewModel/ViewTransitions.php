@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace MageOS\ThemeOptimization\ViewModel;
 
@@ -11,24 +11,35 @@ class ViewTransitions implements ArgumentInterface
     protected const CONFIG_PATH = 'system/view_transitions/';
 
     public function __construct(
-        protected ScopeConfigInterface $scopeConfig,
-    )
-    {
+        protected ScopeConfigInterface $scopeConfig
+    ) {
     }
 
+    /**
+     * @param string $key
+     * @return string|null
+     */
     protected function getConfigValue(string $key): ?string
     {
-        return $this->scopeConfig->getValue(
+        $value = $this->scopeConfig->getValue(
             self::CONFIG_PATH . $key,
             ScopeInterface::SCOPE_STORE
         );
+
+        return $value === null ? null : (string)$value;
     }
 
+    /**
+     * @return bool
+     */
     public function isEnabled(): bool
     {
         return (bool)$this->getConfigValue('enable');
     }
 
+    /**
+     * @return bool
+     */
     public function isEnabledForBfcache(): bool
     {
         return (bool)$this->getConfigValue('enable_for_bfcache');

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace MageOS\ThemeOptimization\Setup\Patch\Data;
 
@@ -11,32 +11,22 @@ use Zend_Db_Expr;
  */
 class UpdateSpeculationRulesConfigPathPatch implements DataPatchInterface
 {
-    /**
-     * @var ModuleDataSetupInterface
-     */
-    private ModuleDataSetupInterface $moduleDataSetup;
-
-    /**
-     * @param ModuleDataSetupInterface $moduleDataSetup
-     */
     public function __construct(
-        ModuleDataSetupInterface $moduleDataSetup
-    )
-    {
-        $this->moduleDataSetup = $moduleDataSetup;
+        protected ModuleDataSetupInterface $moduleDataSetup
+    ) {
     }
 
     /**
      * Do Upgrade.
      *
-     * @return void
+     * @return self
      */
-    public function apply()
+    public function apply(): self
     {
-        $this->moduleDataSetup->getConnection()->startSetup();
+        $connection = $this->moduleDataSetup->getConnection();
+        $connection->startSetup();
 
         // Change the core_config_data path for any 'dev/speculation_rules/*' values to 'system/speculation_rules/*'
-        $connection = $this->moduleDataSetup->getConnection();
         $connection->update(
             $this->moduleDataSetup->getTable('core_config_data'),
             [
@@ -47,7 +37,9 @@ class UpdateSpeculationRulesConfigPathPatch implements DataPatchInterface
             ['path LIKE ?' => 'dev/speculation_rules/%']
         );
 
-        $this->moduleDataSetup->getConnection()->endSetup();
+        $connection->endSetup();
+
+        return $this;
     }
 
     /**
@@ -55,7 +47,7 @@ class UpdateSpeculationRulesConfigPathPatch implements DataPatchInterface
      *
      * @return string[]
      */
-    public function getAliases()
+    public function getAliases(): array
     {
         return [];
     }
@@ -72,7 +64,7 @@ class UpdateSpeculationRulesConfigPathPatch implements DataPatchInterface
      *
      * @return string[]
      */
-    public static function getDependencies()
+    public static function getDependencies(): array
     {
         return [];
     }

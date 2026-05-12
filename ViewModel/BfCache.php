@@ -15,21 +15,15 @@ use Magento\Store\Model\ScopeInterface;
  */
 class BfCache implements ArgumentInterface
 {
-    /** @var string */
-    private const XML_PATH_ENABLE_USER_INTERACTION_RELOAD_MINICART =
+    protected const XML_PATH_ENABLE_USER_INTERACTION_RELOAD_MINICART =
         'system/bfcache/general/enable_user_interaction_reload_minicart';
-        
-    /** @var string */
-    private const XML_PATH_AUTO_CLOSE_MENU_MOBILE =
+
+    protected const XML_PATH_AUTO_CLOSE_MENU_MOBILE =
         'system/bfcache/general/auto_close_menu_mobile';
 
-    /**
-     * @param ScopeConfigInterface $scopeConfig
-     * @param Context $httpContext
-     */
     public function __construct(
-        private ScopeConfigInterface $scopeConfig,
-        private Context $httpContext
+        protected ScopeConfigInterface $scopeConfig,
+        protected Context $httpContext
     ) {
     }
 
@@ -66,6 +60,6 @@ class BfCache implements ArgumentInterface
      */
     public function isCustomerLoggedIn(): bool
     {
-        return (bool) $this->httpContext->getValue(CustomerContext::CONTEXT_AUTH);
+        return (bool)$this->httpContext->getValue(CustomerContext::CONTEXT_AUTH);
     }
 }

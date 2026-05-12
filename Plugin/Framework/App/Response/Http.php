@@ -4,6 +4,7 @@ namespace MageOS\ThemeOptimization\Plugin\Framework\App\Response;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\App\Response\Http as ResponseHttp;
 use Magento\PageCache\Model\Config;
 use Magento\Store\Model\ScopeInterface;
 
@@ -12,34 +13,25 @@ use Magento\Store\Model\ScopeInterface;
  */
 class Http
 {
-    /** @var string */
     public const XML_PATH_ENABLE = 'system/bfcache/general/enable';
-
-    /** @var string */
     public const XML_PATH_EXCLUDE_URL_PATTERNS = 'system/bfcache/scope/exclude_url_patterns';
 
-    /** @var bool */
-    private $isRequestCacheable = false;
+    protected bool $isRequestCacheable = false;
 
-    /**
-     * @param Config $config
-     * @param ScopeConfigInterface $scopeConfig
-     * @param HttpRequest $request
-     */
     public function __construct(
-        private Config $config,
-        private ScopeConfigInterface $scopeConfig,
-        private HttpRequest $request
+        protected Config $config,
+        protected ScopeConfigInterface $scopeConfig,
+        protected HttpRequest $request
     ) {
     }
 
     /**
      * Intercept before setting no-cache headers to determine if request is cacheable
      *
-     * @param \Magento\Framework\App\Response\Http $subject
+     * @param ResponseHttp $subject
      * @return void
      */
-    public function beforeSetNoCacheHeaders(\Magento\Framework\App\Response\Http $subject): void
+    public function beforeSetNoCacheHeaders(ResponseHttp $subject): void
     {
         if ($this->config->getType() !== Config::BUILT_IN || !$this->isEnabled()) {
             return;
@@ -61,11 +53,11 @@ class Http
     /**
      * Update cache headers after setting no-cache headers
      *
-     * @param \Magento\Framework\App\Response\Http $subject
+     * @param ResponseHttp $subject
      * @param mixed $result
      * @return mixed
      */
-    public function afterSetNoCacheHeaders(\Magento\Framework\App\Response\Http $subject, $result)
+    public function afterSetNoCacheHeaders(ResponseHttp $subject, mixed $result): mixed
     {
         if ($this->config->getType() !== Config::BUILT_IN || !$this->isEnabled()) {
             return $result;
@@ -77,7 +69,6 @@ class Http
         }
 
         if ($this->isRequestCacheable === true) {
-            $cacheControlHeader = $subject->getHeader('Cache-Control');
             $cacheControlHeader->removeDirective('no-store');
         }
         $this->isRequestCacheable = false;
@@ -91,7 +82,7 @@ class Http
      * @param string $cacheControl
      * @return bool
      */
-    private function isRequestCacheable(string $cacheControl): bool
+    protected function isRequestCacheable(string $cacheControl): bool
     {
         // FPC hits will not have public or private cache control directives -- already processed
         if (!str_contains($cacheControl, 'public')
@@ -101,7 +92,7 @@ class Http
         }
 
         // FPC misses will be cacheable if they have a public directive
-        return (bool) preg_match('/public.*s-maxage=(\d+)/', $cacheControl);
+        return (bool)preg_match('/public.*s-maxage=(\d+)/', $cacheControl);
     }
 
     /**
@@ -110,11 +101,11 @@ class Http
      * @param string $requestURI
      * @return bool
      */
-    private function isRequestInExcludePatterns(string $requestURI): bool
+    protected function isRequestInExcludePatterns(string $requestURI): bool
     {
         $patterns = $this->getConfig(self::XML_PATH_EXCLUDE_URL_PATTERNS);
 
-        if (empty($patterns)) {
+        if ($patterns === '') {
             return false;
         }
 
@@ -133,9 +124,9 @@ class Http
      * @param string $patterns
      * @return array
      */
-    private function parseExcludePatterns(string $patterns): array
+    protected function parseExcludePatterns(string $patterns): array
     {
-        return array_filter(array_map('trim', explode("\n", $patterns)));
+        return array_values(array_filter(array_map('trim', explode("\n", $patterns))));
     }
 
     /**
@@ -143,7 +134,7 @@ class Http
      *
      * @return bool
      */
-    private function isEnabled(): bool
+    protected function isEnabled(): bool
     {
         return $this->scopeConfig->isSetFlag(
             self::XML_PATH_ENABLE,
@@ -158,7 +149,7 @@ class Http
      * @param int|string|null $store
      * @return string
      */
-    private function getConfig(string $configPath, $store = null): string
+    protected function getConfig(string $configPath, int|string|null $store = null): string
     {
         return (string)$this->scopeConfig->getValue(
             $configPath,
